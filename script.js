@@ -1,5 +1,6 @@
 const GEO_API     = 'https://geocoding-api.open-meteo.com/v1/search';
 const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
+const AQI_API     = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 
 const LS_TABS   = 'wdash_tabs_v1';
 const LS_ACTIVE = 'wdash_active_v1';
@@ -45,8 +46,11 @@ let tabs        = [];
 let activeTabId = null;
 let currentUnit = 'C';
 const weatherCache = {};  // { tabId: { data, timestamp } }
-let debounceTimer  = null;
+const aqiCache     = {};  // { tabId: { data, timestamp } }
+let debounceTimer    = null;
 let temperatureChart = null;
+let activeTimezone   = null;
+let clockInterval    = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -131,14 +135,16 @@ function showContent() {
 
 // ── Render chart ─────────────────────────────────────────────────────────────
 
-function renderChart(hourly) {
-  const nowMs = Date.now();
+function renderChart(hourly, timezone) {
+  // Filter to the current calendar day in the location's local timezone
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone }); // "YYYY-MM-DD"
 
-  // Build 48-hour window starting from the current hour
   const labels = [], temps = [], feelsLike = [];
-  for (let i = 0; i < hourly.time.length && labels.length < 48; i++) {
-    if (new Date(hourly.time[i]).getTime() < nowMs - 3_600_000) continue;
-    labels.push(new Date(hourly.time[i]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  for (let i = 0; i < hourly.time.length; i++) {
+    if (!hourly.time[i].startsWith(todayStr)) continue;
+    const h = parseInt(hourly.time[i].slice(11, 13), 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    labels.push(`${h % 12 || 12} ${ampm}`);
     temps.push(currentUnit === 'C' ? hourly.temperature_2m[i] : toF(hourly.temperature_2m[i]));
     feelsLike.push(currentUnit === 'C' ? hourly.apparent_temperature[i] : toF(hourly.apparent_temperature[i]));
   }
@@ -250,7 +256,10 @@ function renderWeather(data, tab) {
   // Location header
   const nameParts = [tab.name, tab.admin1, tab.country].filter(Boolean);
   document.getElementById('city-name').textContent = nameParts.join(', ');
-  setLocalTime(data.timezone);
+  activeTimezone = data.timezone;
+  setLocalTime(activeTimezone);
+  if (clockInterval) clearInterval(clockInterval);
+  clockInterval = setInterval(() => setLocalTime(activeTimezone), 30_000);
 
   // Current conditions
   const wmo = getWMO(c.weather_code);
@@ -313,37 +322,132 @@ function renderWeather(data, tab) {
     forecastList.appendChild(div);
   }
 
-  renderChart(hourly);
+  renderClothing(c.apparent_temperature, c.weather_code, c.uv_index ?? 0);
+  renderChart(hourly, data.timezone);
   showContent();
 }
 
-// ── Fetch weather ─────────────────────────────────────────────────────────────
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
 
-async function fetchWeatherForTab(tab) {
-  const cached = weatherCache[tab.id];
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    renderWeather(cached.data, tab);
-    return;
-  }
-  showLoading();
+async function doFetchWeather(lat, lon) {
   const params = new URLSearchParams({
-    latitude:     tab.latitude,
-    longitude:    tab.longitude,
-    current:      'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,uv_index',
-    hourly:       'temperature_2m,apparent_temperature,weather_code,precipitation_probability',
-    daily:        'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset',
-    timezone:     'auto',
+    latitude:      lat,
+    longitude:     lon,
+    current:       'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,uv_index',
+    hourly:        'temperature_2m,apparent_temperature,weather_code,precipitation_probability',
+    daily:         'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset',
+    timezone:      'auto',
     forecast_days: 7,
   });
+  const res = await fetch(`${WEATHER_API}?${params}`);
+  if (!res.ok) throw new Error('Weather data unavailable');
+  return res.json();
+}
+
+async function doFetchAQI(lat, lon) {
+  const params = new URLSearchParams({
+    latitude:  lat,
+    longitude: lon,
+    current:   'us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide',
+    timezone:  'auto',
+  });
+  const res = await fetch(`${AQI_API}?${params}`);
+  if (!res.ok) throw new Error('AQI data unavailable');
+  return res.json();
+}
+
+async function fetchWeatherForTab(tab) {
+  const wCached = weatherCache[tab.id];
+  const aCached = aqiCache[tab.id];
+  const now     = Date.now();
+
+  if (wCached && now - wCached.timestamp < CACHE_TTL) {
+    renderWeather(wCached.data, tab);
+    if (aCached && now - aCached.timestamp < CACHE_TTL) {
+      renderAQI(aCached.data);
+    } else {
+      doFetchAQI(tab.latitude, tab.longitude)
+        .then(d => { aqiCache[tab.id] = { data: d, timestamp: Date.now() }; renderAQI(d); })
+        .catch(() => renderAQI(null));
+    }
+    return;
+  }
+
+  showLoading();
   try {
-    const res  = await fetch(`${WEATHER_API}?${params}`);
-    if (!res.ok) throw new Error('Weather data unavailable');
-    const data = await res.json();
-    weatherCache[tab.id] = { data, timestamp: Date.now() };
-    renderWeather(data, tab);
+    const [weatherData, aqiData] = await Promise.all([
+      doFetchWeather(tab.latitude, tab.longitude),
+      doFetchAQI(tab.latitude, tab.longitude).catch(() => null),
+    ]);
+    weatherCache[tab.id] = { data: weatherData, timestamp: Date.now() };
+    if (aqiData) aqiCache[tab.id] = { data: aqiData, timestamp: Date.now() };
+    renderWeather(weatherData, tab);
+    renderAQI(aqiData);
   } catch (e) {
     showError(`Failed to load weather: ${e.message}`);
   }
+}
+
+// ── Render AQI ────────────────────────────────────────────────────────────────
+
+function renderAQI(data) {
+  const section = document.getElementById('aqi-section');
+  if (!data?.current?.us_aqi) { section.classList.add('hidden'); return; }
+
+  const aqi = Math.round(data.current.us_aqi);
+  let label, cls;
+  if      (aqi <= 50)  { label = 'Good';                           cls = 'good';          }
+  else if (aqi <= 100) { label = 'Moderate';                       cls = 'moderate';      }
+  else if (aqi <= 150) { label = 'Unhealthy for Sensitive Groups'; cls = 'sensitive';     }
+  else if (aqi <= 200) { label = 'Unhealthy';                      cls = 'unhealthy';     }
+  else if (aqi <= 300) { label = 'Very Unhealthy';                 cls = 'very-unhealthy';}
+  else                 { label = 'Hazardous';                      cls = 'hazardous';     }
+
+  document.getElementById('aqi-badge').className = `aqi-badge ${cls}`;
+  document.getElementById('aqi-value').textContent  = aqi;
+  document.getElementById('aqi-label').textContent  = label;
+  document.getElementById('aqi-pm25').textContent   = data.current.pm2_5?.toFixed(1)          ?? '—';
+  document.getElementById('aqi-pm10').textContent   = data.current.pm10?.toFixed(1)           ?? '—';
+  document.getElementById('aqi-ozone').textContent  = data.current.ozone?.toFixed(0)          ?? '—';
+  document.getElementById('aqi-no2').textContent    = data.current.nitrogen_dioxide?.toFixed(1) ?? '—';
+  section.classList.remove('hidden');
+}
+
+// ── Render clothing ───────────────────────────────────────────────────────────
+
+function renderClothing(feelsLikeC, weatherCode, uvIndex) {
+  let summary, items;
+
+  if      (feelsLikeC < -10) { summary = 'Extreme cold'; items = ['🧥 Heavy winter coat', '🧣 Scarf', '🧤 Gloves', '🧢 Warm hat', '🥾 Insulated boots']; }
+  else if (feelsLikeC <   0) { summary = 'Very cold';    items = ['🧥 Winter coat', '🧣 Scarf', '🧤 Gloves', '🧢 Hat']; }
+  else if (feelsLikeC <   8) { summary = 'Cold';         items = ['🧥 Heavy jacket', '🧣 Scarf', '👖 Long pants']; }
+  else if (feelsLikeC <  15) { summary = 'Cool';         items = ['🧥 Light jacket', '👕 Sweater', '👖 Long pants']; }
+  else if (feelsLikeC <  20) { summary = 'Mild';         items = ['🧥 Hoodie or light jacket', '👖 Long pants']; }
+  else if (feelsLikeC <  25) { summary = 'Comfortable';  items = ['👕 T-shirt', '👖 Jeans or chinos']; }
+  else if (feelsLikeC <  30) { summary = 'Warm';         items = ['👕 T-shirt', '🩳 Shorts']; }
+  else                        { summary = 'Hot';          items = ['👕 Light breathable clothing', '🩳 Shorts']; }
+
+  const isRain = [51,53,55,61,63,65,80,81,82,95,96,99].includes(weatherCode);
+  const isSnow = [71,73,75,77,85,86].includes(weatherCode);
+  if (isRain) items.push('☂️ Umbrella');
+  if (isSnow) items.push('🥾 Waterproof boots');
+  if (uvIndex >= 6)      items.push('🕶️ Sunglasses', '🧴 Sunscreen SPF 50');
+  else if (uvIndex >= 3) items.push('🕶️ Sunglasses');
+
+  const feelsStr = currentUnit === 'C'
+    ? `${Math.round(feelsLikeC)}°C` : `${Math.round(toF(feelsLikeC))}°F`;
+  document.getElementById('clothing-summary').textContent = `${summary} — feels like ${feelsStr}`;
+
+  const container = document.getElementById('clothing-items');
+  container.innerHTML = '';
+  items.forEach(item => {
+    const chip = document.createElement('span');
+    chip.className   = 'clothing-chip';
+    chip.textContent = item;
+    container.appendChild(chip);
+  });
+
+  document.getElementById('clothing-section').classList.remove('hidden');
 }
 
 // ── Tab management ────────────────────────────────────────────────────────────
@@ -411,6 +515,7 @@ function deleteTab(id) {
   const idx = tabs.findIndex(t => t.id === id);
   tabs.splice(idx, 1);
   delete weatherCache[id];
+  delete aqiCache[id];
   if (activeTabId === id) {
     activeTabId = tabs[Math.min(idx, tabs.length - 1)].id;
   }
