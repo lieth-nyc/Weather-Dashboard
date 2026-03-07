@@ -1,0 +1,517 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #273549;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-dim: #0ea5e9;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+header {
+  margin-bottom: 28px;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+
+.tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabs-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.tabs-bar::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.tab:hover:not(.active) {
+  background: var(--surface2);
+  color: var(--text);
+  transform: none;
+}
+
+.tab.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #fff;
+  transform: none;
+}
+
+.tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0.65;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.tab-close:hover {
+  background: rgba(255,255,255,0.2);
+  opacity: 1;
+}
+
+.add-tab-btn {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 400;
+  padding: 6px 13px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+
+.add-tab-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: none;
+}
+
+/* ── Add city panel ───────────────────────────────────────────────────────── */
+
+.add-city-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-top: 10px;
+  padding: 14px;
+  position: relative;
+}
+
+.add-city-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#add-city-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+  padding: 9px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#add-city-input:focus { border-color: var(--accent); }
+#add-city-input::placeholder { color: var(--text-muted); }
+
+.btn-secondary {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 9px 14px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--surface);
+  color: var(--text);
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-ghost:hover {
+  background: var(--surface2);
+  color: var(--text);
+  transform: none;
+}
+
+/* ── Suggestions ──────────────────────────────────────────────────────────── */
+
+.suggestions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-top: 8px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.suggestions.hidden { display: none; }
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.suggestion-item:last-child { border-bottom: none; }
+
+.suggestion-item:hover { background: var(--surface2); }
+
+.suggestion-item .country {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-left: 4px;
+}
+
+/* ── Generic button base ──────────────────────────────────────────────────── */
+
+button {
+  background: var(--accent-dim);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+button:hover { background: var(--accent); }
+button:active { transform: scale(0.97); }
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  padding: 24px;
+}
+
+.card h3 {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+/* ── Current weather ─────────────────────────────────────────────────────── */
+
+.current-weather {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.location-info h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.time {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.weather-icon {
+  font-size: 5rem;
+  line-height: 1;
+}
+
+.temperature-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.temperature {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.unit-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.unit-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+.unit-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #fff;
+}
+
+.unit-btn:hover:not(.active) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.description {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.detail {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* ── Chart ───────────────────────────────────────────────────────────────── */
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+/* ── Hourly ──────────────────────────────────────────────────────────────── */
+
+.hourly-list {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.hourly-list::-webkit-scrollbar { height: 4px; }
+.hourly-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.hourly-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hourly-item.now {
+  border-color: var(--accent-dim);
+  background: rgba(14, 165, 233, 0.1);
+}
+
+.hourly-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.hourly-icon { font-size: 1.5rem; }
+
+.hourly-temp {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hourly-precip {
+  font-size: 0.7rem;
+  color: #60a5fa;
+}
+
+/* ── Forecast ────────────────────────────────────────────────────────────── */
+
+.forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forecast-item {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.forecast-day {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.forecast-icon { font-size: 1.4rem; }
+
+.forecast-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.forecast-icon-desc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.forecast-temps {
+  display: flex;
+  gap: 10px;
+}
+
+.temp-max {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.temp-min {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────── */
+
+.hidden { display: none !important; }
+
+.loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 60px 0;
+  font-size: 1.05rem;
+}
+
+.error {
+  background: #2d1a1a;
+  border: 1px solid #7f1d1d;
+  border-radius: var(--radius);
+  color: #fca5a5;
+  padding: 16px 20px;
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .details-grid { grid-template-columns: repeat(2, 1fr); }
+  .forecast-item { grid-template-columns: 90px 1fr auto; }
+  .forecast-temps { flex-direction: column; gap: 2px; }
+  .weather-icon { font-size: 3.5rem; }
+  .temperature { font-size: 3rem; }
+  .add-city-search-row { flex-wrap: wrap; }
+}
