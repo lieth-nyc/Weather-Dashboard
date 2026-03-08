@@ -33,9 +33,16 @@ body {
 }
 
 .app {
-  max-width: 900px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 24px 24px 48px;
+}
+
+#main-content {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+  align-items: start;
 }
 
 header {
@@ -266,8 +273,9 @@ button:active { transform: scale(0.97); }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  margin-bottom: 20px;
+  margin-bottom: 0;
   padding: 24px;
+  position: relative;
 }
 
 .card h3 {
@@ -383,6 +391,79 @@ button:active { transform: scale(0.97); }
   font-weight: 600;
 }
 
+/* ── Drag & drop ─────────────────────────────────────────────────────────── */
+
+.drag-handle {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: grab;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: opacity 0.2s, background 0.15s;
+  user-select: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+section:hover .drag-handle {
+  opacity: 0.45;
+}
+
+.drag-handle:hover {
+  opacity: 1 !important;
+  background: var(--surface2);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+section.dragging {
+  opacity: 0.45;
+  outline: 2px dashed var(--accent-dim);
+  outline-offset: 2px;
+}
+
+.drop-indicator {
+  position: fixed;
+  background: var(--accent);
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.drop-indicator.hidden { display: none !important; }
+
+/* ── Resize handle ────────────────────────────────────────────────────────── */
+
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 6px;
+  border-radius: 3px 3px 0 0;
+  background: var(--border);
+  cursor: row-resize;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.15s;
+  z-index: 2;
+}
+
+section:hover .resize-handle {
+  opacity: 0.45;
+}
+
+.resize-handle:hover {
+  opacity: 1 !important;
+  background: var(--accent-dim);
+}
+
 /* ── AQI ─────────────────────────────────────────────────────────────────── */
 
 .aqi-row {
@@ -463,7 +544,7 @@ button:active { transform: scale(0.97); }
 .chart-container {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 280px;
 }
 
 /* ── Hourly ──────────────────────────────────────────────────────────────── */
@@ -526,9 +607,10 @@ button:active { transform: scale(0.97); }
 
 .forecast-item {
   display: grid;
-  grid-template-columns: 120px 1fr auto;
-  align-items: center;
-  gap: 16px;
+  grid-template-columns: 110px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 16px;
+  align-items: start;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -536,6 +618,9 @@ button:active { transform: scale(0.97); }
 }
 
 .forecast-day {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -548,12 +633,16 @@ button:active { transform: scale(0.97); }
 }
 
 .forecast-icon-desc {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .forecast-temps {
+  grid-column: 3;
+  grid-row: 1;
   display: flex;
   gap: 10px;
 }
@@ -566,6 +655,23 @@ button:active { transform: scale(0.97); }
 .temp-min {
   color: var(--text-muted);
   font-size: 0.95rem;
+}
+
+.forecast-extra {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.forecast-extra strong {
+  color: var(--text);
+  font-weight: 600;
+  margin-left: 2px;
 }
 
 /* ── States ──────────────────────────────────────────────────────────────── */
@@ -590,9 +696,14 @@ button:active { transform: scale(0.97); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 
+@media (max-width: 900px) {
+  #main-content { grid-template-columns: 1fr; }
+  #main-content > section { grid-column: 1 / -1 !important; min-height: unset !important; }
+}
+
 @media (max-width: 600px) {
   .details-grid { grid-template-columns: repeat(2, 1fr); }
-  .forecast-item { grid-template-columns: 90px 1fr auto; }
+  .forecast-item { grid-template-columns: 80px 1fr auto; }
   .forecast-temps { flex-direction: column; gap: 2px; }
   .weather-icon { font-size: 3.5rem; }
   .temperature { font-size: 3rem; }
@@ -619,7 +730,8 @@ button:active { transform: scale(0.97); }
     </header>
 
     <main id="main-content" class="hidden">
-      <section class="current-weather card">
+      <section id="widget-current" class="current-weather card">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <div class="location-info">
           <h2 id="city-name">—</h2>
           <p id="local-time" class="time">—</p>
@@ -664,6 +776,7 @@ button:active { transform: scale(0.97); }
       </section>
 
       <section id="aqi-section" class="card hidden">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <h3>Air Quality Index</h3>
         <div class="aqi-row">
           <div id="aqi-badge" class="aqi-badge"><span id="aqi-value">—</span></div>
@@ -680,24 +793,28 @@ button:active { transform: scale(0.97); }
       </section>
 
       <section id="clothing-section" class="card hidden">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <h3>What to Wear</h3>
         <p id="clothing-summary" class="clothing-summary">—</p>
         <div id="clothing-items" class="clothing-items"></div>
       </section>
 
-      <section class="chart-section card">
-        <h3>Temperature Trend — Today</h3>
+      <section id="widget-chart" class="chart-section card">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <h3>Temperature Trend — Today through Midnight</h3>
         <div class="chart-container">
           <canvas id="temp-chart"></canvas>
         </div>
       </section>
 
-      <section class="hourly-section card">
+      <section id="widget-hourly" class="hourly-section card">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <h3>Hourly Forecast</h3>
         <div id="hourly-list" class="hourly-list"></div>
       </section>
 
-      <section class="forecast-section card">
+      <section id="widget-forecast" class="forecast-section card">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <h3>7-Day Forecast</h3>
         <div id="forecast-list" class="forecast-list"></div>
       </section>
@@ -768,8 +885,11 @@ const getWMO = code => WMO_CODES[code] || { label: 'Unknown', icon: '🌡️' };
 const toF    = c    => c * 9/5 + 32;
 const dispTemp = c  => currentUnit === 'C' ? `${Math.round(c)}°C` : `${Math.round(toF(c))}°F`;
 
-function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatTime(iso, timezone, showTZ = false) {
+  const opts = { hour: '2-digit', minute: '2-digit' };
+  if (timezone) opts.timeZone = timezone;
+  if (showTZ)   opts.timeZoneName = 'short';
+  return new Date(iso).toLocaleTimeString('en-US', opts);
 }
 
 function formatDay(dateStr) {
@@ -846,15 +966,21 @@ function showContent() {
 // ── Render chart ─────────────────────────────────────────────────────────────
 
 function renderChart(hourly, timezone) {
-  // Filter to the current calendar day in the location's local timezone
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone }); // "YYYY-MM-DD"
+  // Filter to today + midnight of next day in the location's local timezone
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toLocaleDateString('en-CA', { timeZone: timezone });
 
   const labels = [], temps = [], feelsLike = [];
   for (let i = 0; i < hourly.time.length; i++) {
-    if (!hourly.time[i].startsWith(todayStr)) continue;
+    const isToday    = hourly.time[i].startsWith(todayStr);
+    const isMidnight = hourly.time[i] === tomorrowStr + 'T00:00';
+    if (!isToday && !isMidnight) continue;
     const h = parseInt(hourly.time[i].slice(11, 13), 10);
     const ampm = h >= 12 ? 'PM' : 'AM';
-    labels.push(`${h % 12 || 12} ${ampm}`);
+    const label = isMidnight ? '12 AM ↑' : `${h % 12 || 12} ${ampm}`;
+    labels.push(label);
     temps.push(currentUnit === 'C' ? hourly.temperature_2m[i] : toF(hourly.temperature_2m[i]));
     feelsLike.push(currentUnit === 'C' ? hourly.apparent_temperature[i] : toF(hourly.apparent_temperature[i]));
   }
@@ -978,10 +1104,10 @@ function renderWeather(data, tab) {
   document.getElementById('current-description').textContent = wmo.label;
   document.getElementById('feels-like').textContent          = dispTemp(c.apparent_temperature);
   document.getElementById('humidity').textContent            = `${c.relative_humidity_2m}%`;
-  document.getElementById('wind-speed').textContent          = `${c.wind_speed_10m} km/h`;
+  document.getElementById('wind-speed').textContent          = `${Math.round(c.wind_speed_10m * 0.621371)} mph`;
   document.getElementById('uv-index').textContent            = c.uv_index ?? '—';
-  document.getElementById('sunrise').textContent             = daily.sunrise[0] ? formatTime(daily.sunrise[0]) : '—';
-  document.getElementById('sunset').textContent              = daily.sunset[0]  ? formatTime(daily.sunset[0])  : '—';
+  document.getElementById('sunrise').textContent             = daily.sunrise[0] ? formatTime(daily.sunrise[0], data.timezone, true) : '—';
+  document.getElementById('sunset').textContent              = daily.sunset[0]  ? formatTime(daily.sunset[0],  data.timezone, true) : '—';
 
   // Sync unit buttons
   document.querySelectorAll('.unit-btn').forEach(b =>
@@ -1015,8 +1141,13 @@ function renderWeather(data, tab) {
   const forecastList = document.getElementById('forecast-list');
   forecastList.innerHTML = '';
   for (let i = 0; i < daily.time.length; i++) {
-    const wmoD = getWMO(daily.weather_code[i]);
-    const div  = document.createElement('div');
+    const wmoD   = getWMO(daily.weather_code[i]);
+    const wind   = daily.wind_speed_10m_max?.[i]            != null ? `${Math.round(daily.wind_speed_10m_max[i] * 0.621371)} mph` : '—';
+    const uv     = daily.uv_index_max?.[i]                  != null ? daily.uv_index_max[i].toFixed(1)                           : '—';
+    const precip = daily.precipitation_probability_max?.[i] != null ? `${daily.precipitation_probability_max[i]}%`                : '—';
+    const sr     = daily.sunrise?.[i] ? formatTime(daily.sunrise[i], data.timezone, true) : '—';
+    const ss     = daily.sunset?.[i]  ? formatTime(daily.sunset[i],  data.timezone, true) : '—';
+    const div    = document.createElement('div');
     div.className = 'forecast-item';
     div.innerHTML = `
       <span class="forecast-day">${formatDay(daily.time[i])}</span>
@@ -1027,6 +1158,13 @@ function renderWeather(data, tab) {
       <div class="forecast-temps">
         <span class="temp-max">${dispTemp(daily.temperature_2m_max[i])}</span>
         <span class="temp-min">${dispTemp(daily.temperature_2m_min[i])}</span>
+      </div>
+      <div class="forecast-extra">
+        <span>💧 <strong>${precip}</strong></span>
+        <span>💨 <strong>${wind}</strong></span>
+        <span>UV <strong>${uv}</strong></span>
+        <span>🌅 <strong>${sr}</strong></span>
+        <span>🌇 <strong>${ss}</strong></span>
       </div>
     `;
     forecastList.appendChild(div);
@@ -1045,7 +1183,7 @@ async function doFetchWeather(lat, lon) {
     longitude:     lon,
     current:       'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,uv_index',
     hourly:        'temperature_2m,apparent_temperature,weather_code,precipitation_probability',
-    daily:         'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset',
+    daily:         'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,wind_speed_10m_max,uv_index_max,precipitation_probability_max',
     timezone:      'auto',
     forecast_days: 7,
   });
@@ -1328,10 +1466,259 @@ document.querySelectorAll('.unit-btn').forEach(btn => {
   });
 });
 
+// ── Widget layout (grid + drag-and-drop) ─────────────────────────────────────
+
+const LS_WIDGETS = 'wdash_widgets_v1';
+
+// Each row is an array of widget IDs.
+// 1-item row = full width (grid-column: 1/-1).
+// 2-item row = side by side (grid-column: span 1 each).
+const DEFAULT_LAYOUT = [
+  ['widget-current'],
+  ['aqi-section'],
+  ['clothing-section'],
+  ['widget-chart'],
+  ['widget-hourly'],
+  ['widget-forecast'],
+];
+let widgetLayout = DEFAULT_LAYOUT.map(r => [...r]);
+
+function loadLayout() {
+  try {
+    const saved = localStorage.getItem(LS_WIDGETS);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed) || !parsed.length) return;
+    // Back-compat: old format was flat array of strings
+    widgetLayout = typeof parsed[0] === 'string' ? parsed.map(id => [id]) : parsed;
+  } catch (_) {}
+}
+
+function saveLayout() {
+  localStorage.setItem(LS_WIDGETS, JSON.stringify(widgetLayout));
+}
+
+function applyLayout() {
+  const main = document.getElementById('main-content');
+  const allIds = new Set(Array.from(main.querySelectorAll(':scope > section')).map(s => s.id));
+
+  // Add any widgets missing from saved layout (new widgets added in code)
+  const layoutIds = new Set(widgetLayout.flat());
+  allIds.forEach(id => { if (!layoutIds.has(id)) widgetLayout.push([id]); });
+
+  // Drop stale IDs that no longer exist in DOM
+  widgetLayout = widgetLayout
+    .map(row => row.filter(id => allIds.has(id)))
+    .filter(row => row.length > 0);
+
+  // Reorder DOM + set grid-column
+  widgetLayout.flat().forEach(id => {
+    const el = document.getElementById(id);
+    if (el) main.appendChild(el);
+  });
+  widgetLayout.forEach(row =>
+    row.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if      (row.length === 1) el.style.gridColumn = '1 / -1'; // full width (6 cols)
+      else if (row.length === 2) el.style.gridColumn = 'span 3'; // half (3 of 6)
+      else                       el.style.gridColumn = 'span 2'; // third (2 of 6)
+    })
+  );
+}
+
+function applyDrop(dragId, type, targetId) {
+  // Remove dragId from wherever it currently is
+  widgetLayout = widgetLayout
+    .map(row => row.filter(id => id !== dragId))
+    .filter(row => row.length > 0);
+
+  if (!targetId) { widgetLayout.push([dragId]); return; }
+
+  const rowIdx = widgetLayout.findIndex(row => row.includes(targetId));
+  if (rowIdx === -1) { widgetLayout.push([dragId]); return; }
+
+  const row = widgetLayout[rowIdx];
+
+  if (type === 'side-left' && row.length < 3) {
+    const targetIdx = row.indexOf(targetId);
+    row.splice(targetIdx, 0, dragId);
+    widgetLayout[rowIdx] = row;
+  } else if (type === 'side-right' && row.length < 3) {
+    const targetIdx = row.indexOf(targetId);
+    row.splice(targetIdx + 1, 0, dragId);
+    widgetLayout[rowIdx] = row;
+  } else if (type === 'before') {
+    widgetLayout.splice(rowIdx, 0, [dragId]);
+  } else {
+    widgetLayout.splice(rowIdx + 1, 0, [dragId]);
+  }
+}
+
+function initDragAndDrop() {
+  const main = document.getElementById('main-content');
+  let dragSrc = null;
+  let lastDrop = null;
+
+  const indicator = document.createElement('div');
+  indicator.className = 'drop-indicator hidden';
+  document.body.appendChild(indicator);
+
+  function getDropInfo(clientX, clientY) {
+    const sections = Array.from(main.querySelectorAll(':scope > section')).filter(s => s !== dragSrc);
+    for (const s of sections) {
+      const r = s.getBoundingClientRect();
+      if (clientY < r.top - 10 || clientY > r.bottom + 10) continue;
+      if (clientX < r.left - 20 || clientX > r.right + 20) continue;
+      const relX = (clientX - r.left) / r.width;
+      const rowLen = (widgetLayout.find(row => row.includes(s.id)) || []).length;
+      if (rowLen < 3 && relX < 0.28) return { type: 'side-left',  target: s, rect: r };
+      if (rowLen < 3 && relX > 0.72) return { type: 'side-right', target: s, rect: r };
+      const relY = (clientY - r.top) / r.height;
+      return { type: relY < 0.5 ? 'before' : 'after', target: s, rect: r };
+    }
+    const all = Array.from(main.querySelectorAll(':scope > section'));
+    const last = all[all.length - 1];
+    return last ? { type: 'after', target: last, rect: last.getBoundingClientRect() } : null;
+  }
+
+  function showIndicator(info) {
+    if (!info) { indicator.classList.add('hidden'); return; }
+    const { type, rect: r } = info;
+    const s = indicator.style;
+    indicator.classList.remove('hidden');
+    if (type === 'before') {
+      s.left = r.left + 'px';  s.top = (r.top - 3) + 'px';
+      s.width = r.width + 'px'; s.height = '3px';
+    } else if (type === 'after') {
+      s.left = r.left + 'px';  s.top = (r.bottom + 1) + 'px';
+      s.width = r.width + 'px'; s.height = '3px';
+    } else if (type === 'side-left') {
+      s.left = (r.left - 3) + 'px'; s.top = r.top + 'px';
+      s.width = '3px'; s.height = r.height + 'px';
+    } else if (type === 'side-right') {
+      s.left = (r.right + 1) + 'px'; s.top = r.top + 'px';
+      s.width = '3px'; s.height = r.height + 'px';
+    }
+  }
+
+  main.querySelectorAll(':scope > section').forEach(section => {
+    const handle = section.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', () => { section.draggable = true; });
+    section.addEventListener('dragstart', e => {
+      if (!section.draggable) { e.preventDefault(); return; }
+      dragSrc = section;
+      e.dataTransfer.effectAllowed = 'move';
+      requestAnimationFrame(() => section.classList.add('dragging'));
+    });
+    section.addEventListener('dragend', () => {
+      section.classList.remove('dragging');
+      section.draggable = false;
+      indicator.classList.add('hidden');
+      dragSrc = null; lastDrop = null;
+    });
+  });
+
+  document.addEventListener('mouseup', () => {
+    main.querySelectorAll(':scope > section').forEach(s => { s.draggable = false; });
+  });
+
+  main.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!dragSrc) return;
+    lastDrop = getDropInfo(e.clientX, e.clientY);
+    showIndicator(lastDrop);
+  });
+
+  main.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragSrc || !lastDrop) return;
+    applyDrop(dragSrc.id, lastDrop.type, lastDrop.target?.id ?? null);
+    applyLayout();
+    indicator.classList.add('hidden');
+    saveLayout();
+  });
+}
+
+// ── Widget resize ─────────────────────────────────────────────────────────────
+
+const LS_HEIGHTS = 'wdash_heights_v1';
+let widgetHeights = {};
+
+function loadHeights() {
+  try {
+    const saved = localStorage.getItem(LS_HEIGHTS);
+    if (saved) widgetHeights = JSON.parse(saved);
+  } catch (_) {}
+}
+
+function saveHeights() {
+  localStorage.setItem(LS_HEIGHTS, JSON.stringify(widgetHeights));
+}
+
+function applyHeights() {
+  Object.entries(widgetHeights).forEach(([id, h]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.minHeight = h + 'px';
+  });
+}
+
+function initResize() {
+  const main = document.getElementById('main-content');
+  main.querySelectorAll(':scope > section').forEach(section => {
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.title     = 'Drag to resize height · Double-click to reset';
+    section.appendChild(handle);
+
+    // Double-click resets height
+    handle.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      section.style.minHeight = '';
+      delete widgetHeights[section.id];
+      saveHeights();
+    });
+
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startY = e.clientY;
+      const startH = section.getBoundingClientRect().height;
+      document.body.style.userSelect  = 'none';
+      document.body.style.cursor      = 'row-resize';
+
+      function onMove(ev) {
+        const newH = Math.max(80, startH + (ev.clientY - startY));
+        section.style.minHeight = newH + 'px';
+      }
+
+      function onUp(ev) {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor     = '';
+        const newH = Math.max(80, startH + (ev.clientY - startY));
+        widgetHeights[section.id] = newH;
+        saveHeights();
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 loadState();
 renderTabs();
+loadLayout();
+loadHeights();
+applyLayout();
+applyHeights();
+initDragAndDrop();
+initResize();
 const initialTab = tabs.find(t => t.id === activeTabId);
 if (initialTab) fetchWeatherForTab(initialTab);
   </script>
