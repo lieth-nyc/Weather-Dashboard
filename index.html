@@ -978,8 +978,49 @@ function renderChart(hourly, timezone) {
     temperatureChart = null;
   }
 
+  // Current-time vertical line plugin
+  const nowInTz = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
+  const nowH = nowInTz.getHours();
+  const nowAmpm = nowH >= 12 ? 'PM' : 'AM';
+  const nowLabel = `${nowH % 12 || 12} ${nowAmpm}`;
+  const nowIndex = labels.indexOf(nowLabel);
+
+  const currentTimePlugin = {
+    id: 'currentTimeLine',
+    afterDatasetsDraw(chart) {
+      if (nowIndex < 0) return;
+      const { ctx: c, chartArea: { top, bottom }, scales: { x } } = chart;
+      const xPos = x.getPixelForValue(nowIndex);
+      c.save();
+      c.beginPath();
+      c.setLineDash([4, 4]);
+      c.strokeStyle = 'rgba(250, 204, 21, 0.75)';
+      c.lineWidth = 1.5;
+      c.moveTo(xPos, top);
+      c.lineTo(xPos, bottom);
+      c.stroke();
+      // Label above
+      c.setLineDash([]);
+      c.fillStyle = 'rgba(250, 204, 21, 0.9)';
+      const labelText = 'Now';
+      const textW = c.measureText(labelText).width;
+      const padding = 4;
+      const boxX = xPos - textW / 2 - padding;
+      const boxY = top - 1;
+      const boxH = 16;
+      c.fillRect(boxX, boxY, textW + padding * 2, boxH);
+      c.fillStyle = '#0f172a';
+      c.font = '600 10px system-ui, sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(labelText, xPos, boxY + boxH / 2);
+      c.restore();
+    },
+  };
+
   temperatureChart = new Chart(ctx, {
     type: 'line',
+    plugins: [currentTimePlugin],
     data: {
       labels,
       datasets: [
