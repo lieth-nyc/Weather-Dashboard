@@ -13,16 +13,16 @@
 }
 
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface2: #273549;
-  --border: #334155;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-dim: #0ea5e9;
-  --radius: 16px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --bg: #080010;
+  --surface: #110022;
+  --surface2: #1a0035;
+  --border: #5500bb;
+  --text: #e8f0ff;
+  --text-muted: #9977cc;
+  --accent: #00ffee;
+  --accent-dim: #00ccdd;
+  --radius: 8px;
+  --shadow: 0 4px 32px rgba(0,0,0,0.8);
 }
 
 body {
@@ -270,9 +270,9 @@ button:active { transform: scale(0.97); }
 
 .card {
   background: var(--surface);
-  border: 1px solid rgba(51, 65, 85, 0.5);
+  border: 1px solid rgba(85, 0, 187, 0.55);
   border-radius: var(--radius);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.8), 0 0 24px rgba(0,255,238,0.04);
   margin-bottom: 0;
   padding: 24px;
   position: relative;
@@ -434,7 +434,7 @@ section.dragging {
   border-radius: 3px;
   pointer-events: none;
   z-index: 1000;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 238, 0.7);
 }
 
 .drop-indicator.hidden { display: none !important; }
@@ -487,12 +487,12 @@ section:hover .resize-handle {
   background: var(--surface2);
 }
 
-.aqi-badge.good          { background: #16a34a; }
-.aqi-badge.moderate      { background: #ca8a04; }
-.aqi-badge.sensitive     { background: #ea580c; }
-.aqi-badge.unhealthy     { background: #dc2626; }
-.aqi-badge.very-unhealthy{ background: #9333ea; }
-.aqi-badge.hazardous     { background: #7f1d1d; }
+.aqi-badge.good          { background: #00aa33; }
+.aqi-badge.moderate      { background: #ccaa00; }
+.aqi-badge.sensitive     { background: #dd5500; }
+.aqi-badge.unhealthy     { background: #cc0022; }
+.aqi-badge.very-unhealthy{ background: #9900cc; }
+.aqi-badge.hazardous     { background: #770000; }
 
 .aqi-info { flex: 1; }
 
@@ -585,7 +585,7 @@ section:hover .resize-handle {
 }
 
 .hourly-item.now {
-  background: rgba(14, 165, 233, 0.15);
+  background: rgba(0, 255, 238, 0.08);
   outline: 1px solid var(--accent-dim);
 }
 
@@ -604,7 +604,7 @@ section:hover .resize-handle {
 
 .hourly-precip {
   font-size: 0.7rem;
-  color: #60a5fa;
+  color: #00ccdd;
 }
 
 /* ── Forecast ────────────────────────────────────────────────────────────── */
@@ -676,10 +676,10 @@ section:hover .resize-handle {
 }
 
 .error {
-  background: #2d1a1a;
-  border: 1px solid #7f1d1d;
+  background: #200015;
+  border: 1px solid #cc0066;
   border-radius: var(--radius);
-  color: #fca5a5;
+  color: #ff88cc;
   padding: 16px 20px;
   text-align: center;
 }
@@ -980,8 +980,8 @@ function renderChart(hourly, timezone) {
 
   // Gradient fill for temperature line
   const gradFill = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 220);
-  gradFill.addColorStop(0, 'rgba(14, 165, 233, 0.25)');
-  gradFill.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
+  gradFill.addColorStop(0, 'rgba(0, 255, 238, 0.2)');
+  gradFill.addColorStop(1, 'rgba(0, 255, 238, 0.0)');
 
   if (temperatureChart) {
     temperatureChart.destroy();
@@ -1004,14 +1004,14 @@ function renderChart(hourly, timezone) {
       c.save();
       c.beginPath();
       c.setLineDash([4, 4]);
-      c.strokeStyle = 'rgba(250, 204, 21, 0.75)';
+      c.strokeStyle = 'rgba(255, 255, 0, 0.8)';
       c.lineWidth = 1.5;
       c.moveTo(xPos, top);
       c.lineTo(xPos, bottom);
       c.stroke();
       // Label above
       c.setLineDash([]);
-      c.fillStyle = 'rgba(250, 204, 21, 0.9)';
+      c.fillStyle = 'rgba(255, 255, 0, 0.9)';
       const labelText = 'Now';
       const textW = c.measureText(labelText).width;
       const padding = 4;
@@ -1019,7 +1019,7 @@ function renderChart(hourly, timezone) {
       const boxY = top - 1;
       const boxH = 16;
       c.fillRect(boxX, boxY, textW + padding * 2, boxH);
-      c.fillStyle = '#0f172a';
+      c.fillStyle = '#080010';
       c.font = '600 10px system-ui, sans-serif';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
@@ -1037,25 +1037,25 @@ function renderChart(hourly, timezone) {
         {
           label: 'Temperature',
           data: temps,
-          borderColor: '#38bdf8',
+          borderColor: '#00ffee',
           backgroundColor: gradFill,
           borderWidth: 2.5,
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#38bdf8',
+          pointHoverBackgroundColor: '#00ffee',
           tension: 0.4,
           fill: true,
         },
         {
           label: 'Feels Like',
           data: feelsLike,
-          borderColor: '#f472b6',
+          borderColor: '#ff2d78',
           backgroundColor: 'transparent',
           borderWidth: 2,
           borderDash: [5, 4],
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#f472b6',
+          pointHoverBackgroundColor: '#ff2d78',
           tension: 0.4,
           fill: false,
         },
@@ -1068,7 +1068,7 @@ function renderChart(hourly, timezone) {
       plugins: {
         legend: {
           labels: {
-            color: '#94a3b8',
+            color: '#9977cc',
             font: { size: 12 },
             boxWidth: 14,
             padding: 16,
@@ -1077,11 +1077,11 @@ function renderChart(hourly, timezone) {
           },
         },
         tooltip: {
-          backgroundColor: '#1e293b',
-          borderColor: '#334155',
+          backgroundColor: '#110022',
+          borderColor: '#5500bb',
           borderWidth: 1,
-          titleColor: '#f1f5f9',
-          bodyColor: '#94a3b8',
+          titleColor: '#e8f0ff',
+          bodyColor: '#9977cc',
           padding: 10,
           callbacks: {
             label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y)}${currentUnit === 'C' ? '°C' : '°F'}`,
@@ -1091,22 +1091,22 @@ function renderChart(hourly, timezone) {
       scales: {
         x: {
           ticks: {
-            color: '#64748b',
+            color: '#6644aa',
             font: { size: 11 },
             maxRotation: 0,
             maxTicksLimit: 12,
           },
-          grid: { color: 'rgba(51, 65, 85, 0.6)' },
-          border: { color: '#334155' },
+          grid: { color: 'rgba(85, 0, 187, 0.3)' },
+          border: { color: '#5500bb' },
         },
         y: {
           ticks: {
-            color: '#64748b',
+            color: '#6644aa',
             font: { size: 11 },
             callback: v => `${Math.round(v)}${currentUnit === 'C' ? '°C' : '°F'}`,
           },
-          grid: { color: 'rgba(51, 65, 85, 0.6)' },
-          border: { color: '#334155' },
+          grid: { color: 'rgba(85, 0, 187, 0.3)' },
+          border: { color: '#5500bb' },
         },
       },
     },
