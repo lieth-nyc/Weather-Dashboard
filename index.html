@@ -42,7 +42,7 @@ body {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 header {
@@ -542,6 +542,16 @@ section:hover .resize-handle {
 
 /* ── Chart ───────────────────────────────────────────────────────────────── */
 
+.chart-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-section .chart-container {
+  flex: 1;
+  min-height: 180px;
+}
+
 .chart-container {
   position: relative;
   width: 100%;
@@ -602,17 +612,17 @@ section:hover .resize-handle {
 .forecast-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .forecast-item {
   display: grid;
   grid-template-columns: 90px 1.6rem 1fr auto auto auto 88px;
   align-items: center;
-  gap: 0 14px;
+  gap: 0 20px;
   background: var(--surface2);
   border-radius: 10px;
-  padding: 13px 16px;
+  padding: 16px 20px;
 }
 
 .forecast-day {
@@ -1053,7 +1063,7 @@ function renderChart(hourly, timezone) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
